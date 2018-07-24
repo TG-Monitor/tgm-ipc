@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+group 'ai.quantumsense.tgmonitor'
+version '0.0.1'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile 'com.rabbitmq:amqp-client:5.3.0'
+}
+
+jar {
+    exclude('ai/quantumsense/tgmonitor/test/**')
+}
+
+allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
+    }
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+dependencies {
+    implementation 'com.github.tg-monitor:tgm-monitor-facade:master-SNAPSHOT'
+}
