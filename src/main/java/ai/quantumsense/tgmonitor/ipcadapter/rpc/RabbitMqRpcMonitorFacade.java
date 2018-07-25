@@ -2,6 +2,8 @@ package ai.quantumsense.tgmonitor.ipcadapter.rpc;
 
 import ai.quantumsense.tgmonitor.monitorfacade.MonitorFacade;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 public class RabbitMqRpcMonitorFacade implements MonitorFacade {
@@ -49,7 +51,8 @@ public class RabbitMqRpcMonitorFacade implements MonitorFacade {
 
     @Override
     public Set<String> getPeers() {
-        return (Set<String>) rpcClient.call("getPeers");
+        ArrayList<String> l = (ArrayList<String>) rpcClient.call("getPeers");
+        return new HashSet<>(l);
     }
 
     @Override

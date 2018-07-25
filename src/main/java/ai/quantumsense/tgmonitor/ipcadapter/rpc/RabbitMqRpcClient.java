@@ -1,6 +1,5 @@
 package ai.quantumsense.tgmonitor.ipcadapter.rpc;
 
-import ai.quantumsense.tgmonitor.ipcadapter.rpc.RpcClient;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
