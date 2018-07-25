@@ -1,4 +1,4 @@
-package ai.quantumsense.tgmonitor.ipcadapter.rpc.rabbitmq;
+package ai.quantumsense.tgmonitor.ipcadapter.rpc;
 
 import ai.quantumsense.tgmonitor.ipcadapter.rpc.RpcClient;
 import com.rabbitmq.client.Channel;
@@ -10,12 +10,12 @@ import com.rabbitmq.tools.jsonrpc.JsonRpcException;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-public class RabbitMqJsonRpcClient implements RpcClient {
+public class RabbitMqRpcClient implements RpcClient {
 
     private Connection connection;
     private JsonRpcClient rpcClient;
 
-    public RabbitMqJsonRpcClient(String queueName) {
+    public RabbitMqRpcClient(String queueName) {
         try {
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost("localhost");

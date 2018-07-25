@@ -4,11 +4,11 @@ import ai.quantumsense.tgmonitor.monitorfacade.MonitorFacade;
 
 import java.util.Set;
 
-public class MonitorFacadeRpcAdapter implements MonitorFacade {
+public class RabbitMqRpcMonitorFacade implements MonitorFacade {
 
     RpcClient rpcClient;
 
-    public MonitorFacadeRpcAdapter(RpcClient rpcClient) {
+    public RabbitMqRpcMonitorFacade(RpcClient rpcClient) {
         this.rpcClient = rpcClient;
     }
 
