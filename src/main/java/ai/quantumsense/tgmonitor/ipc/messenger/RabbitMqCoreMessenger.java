@@ -84,7 +84,7 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
             String replyToQueue = createAutoNamedQueue();
             AMQP.BasicProperties requestProps = new AMQP.BasicProperties
                     .Builder()
-                    .correlationId(createCorrelationId())
+                    .correlationId(makeUuid())
                     .replyTo(replyToQueue)
                     .build();
             logger.debug("Sending login code request ");
@@ -134,7 +134,7 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
         return name;
     }
 
-    private String createCorrelationId() {
+    private String makeUuid() {
         return UUID.randomUUID().toString();
     }
 }

@@ -33,7 +33,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
     private Channel channel;
     private Serializer serializer;
 
-    private String responseQueue;
+    private String responseQueue = "responses-" + makeUuid();
     private String loginCodeRequestQueue;
 
     public RabbitMqUiMessenger(Serializer serializer) {
@@ -44,10 +44,10 @@ public class RabbitMqUiMessenger implements UiMessenger {
             logger.debug("Connecting to RabbitMQ on " + factory.getHost());
             connection = factory.newConnection();
             channel = connection.createChannel();
-            channel.queueDeclare(REQUEST_QUEUE, false, false, true, null);
-            logger.debug("Declared request queue \"" + REQUEST_QUEUE + "\"");
-            responseQueue = createAutoNamedQueue();
-            logger.debug("Declared response queue \"" + responseQueue + "\"");
+            logger.debug("Declaring request queue \"" + REQUEST_QUEUE + "\"");
+            channel.queueDeclare(REQUEST_QUEUE, false, false, false, null);
+            logger.debug("Declaring response queue \"" + responseQueue + "\"");
+            channel.queueDeclare(responseQueue, false, true, false, null);
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
@@ -85,7 +85,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
      * @return Correlation ID.
      */
     private String sendRequest(Request request) {
-        String correlationId = createCorrelationId();
+        String correlationId = makeUuid();
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
                 .correlationId(correlationId)
                 .replyTo(responseQueue)
@@ -110,7 +110,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
      * @return Correlation ID.
      */
     private String sendLoginRequest(Request request) {
-        String correlationId = createCorrelationId();
+        String correlationId = makeUuid();
         loginCodeRequestQueue = createAutoNamedQueue();
         Map<String, Object> headers = new HashMap<>();
         headers.put(KEY_LOGIN_CODE_REQUEST_QUEUE, loginCodeRequestQueue);
@@ -218,7 +218,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
         return name;
     }
 
-    private String createCorrelationId() {
+    private String makeUuid() {
         return UUID.randomUUID().toString();
     }
 }
