@@ -53,7 +53,7 @@ public class Response {
     @Override
     public boolean equals(Object response) {
         Response other = (Response) response;
-        return hasSameStringValue(this, other) && hasSameSetValue(this, other);
+        return hasSameStringValue(this, other) && hasSameSetValue(this, other) && hasSameBoolValue(this, other);
     }
     private boolean hasSameBoolValue(Response res1, Response res2) {
         return (res1.getBool() == null && res2.getBool() == null) || res1.getBool().equals(res2.getBool());
@@ -63,6 +63,16 @@ public class Response {
     }
     private boolean hasSameSetValue(Response res1, Response res2) {
         return (res1.getSet() == null && res2.getSet() == null) || res1.getSet().equals(res2.getSet());
+    }
+
+    @Override
+    public String toString() {
+        String s = null;
+        if (isVoidResponse()) s = "<void>";
+        else if (isBooleanResponse()) s = bool + " (boolean)";
+        else if (isStringResponse()) s = string;
+        else if (isSetResponse()) s = set.toString();
+        return s;
     }
 }
 

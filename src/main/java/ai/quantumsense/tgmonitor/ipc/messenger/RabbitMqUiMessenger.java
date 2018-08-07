@@ -10,6 +10,8 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -20,10 +22,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeoutException;
 
 import static ai.quantumsense.tgmonitor.ipc.messenger.Shared.REQUEST_QUEUE;
-import static ai.quantumsense.tgmonitor.ipc.messenger.Shared.LOGIN_CODE_REQUEST_QUEUE_KEY;
+import static ai.quantumsense.tgmonitor.ipc.messenger.Shared.KEY_LOGIN_CODE_REQUEST_QUEUE;
 
 
 public class RabbitMqUiMessenger implements UiMessenger {
+
+    private Logger logger = LoggerFactory.getLogger(RabbitMqUiMessenger.class);
 
     private Connection connection;
     private Channel channel;
@@ -37,10 +41,13 @@ public class RabbitMqUiMessenger implements UiMessenger {
         try {
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost("localhost");
+            logger.debug("Connecting to RabbitMQ on " + factory.getHost());
             connection = factory.newConnection();
             channel = connection.createChannel();
             channel.queueDeclare(REQUEST_QUEUE, false, false, true, null);
-            responseQueue = channel.queueDeclare().getQueue();
+            logger.debug("Declared request queue \"" + REQUEST_QUEUE + "\"");
+            responseQueue = createAutoNamedQueue();
+            logger.debug("Declared response queue \"" + responseQueue + "\"");
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
@@ -96,9 +103,11 @@ public class RabbitMqUiMessenger implements UiMessenger {
      * @return Correlation ID.
      */
     private String sendLoginRequest(Request request) {
+        logger.debug("Preparing to send login request");
         loginCodeRequestQueue = createAutoNamedQueue();
+        logger.debug("Created login code request queue " + loginCodeRequestQueue);
         Map<String, Object> headers = new HashMap<>();
-        headers.put(LOGIN_CODE_REQUEST_QUEUE_KEY, loginCodeRequestQueue);
+        headers.put(KEY_LOGIN_CODE_REQUEST_QUEUE, loginCodeRequestQueue);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
                 .correlationId(createCorrelationId())
                 .replyTo(responseQueue)
@@ -108,6 +117,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
     }
 
     private String doSendRequest(Request request, AMQP.BasicProperties props) {
+        logger.debug("Sending request: " + request);
         try {
             channel.basicPublish("", REQUEST_QUEUE, props, serializer.serialize(request));
         } catch (IOException e) {
@@ -127,6 +137,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
     private Response waitForResponse(String correlationId) {
         final BlockingQueue<byte[]> wait = new ArrayBlockingQueue<>(1);
         try {
+            logger.debug("Start listening for response on queue \"" + responseQueue + "\"");
             channel.basicConsume(responseQueue, true, new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
@@ -144,6 +155,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        logger.debug("Received response: " + response);
         return response;
     }
 
@@ -160,15 +172,18 @@ public class RabbitMqUiMessenger implements UiMessenger {
      */
     private void handleLoginCodeRequest(LoginCodePrompt loginCodePrompt) {
         try {
+            logger.debug("Start listening for login code request on queue \"" + loginCodeRequestQueue + "\"");
             channel.basicConsume(loginCodeRequestQueue, true, new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties requestProps, byte[] body) {
+                    logger.debug("Received login code request");
                     Response response = new Response(loginCodePrompt.promptLoginCode());
                     AMQP.BasicProperties responseProps = new AMQP.BasicProperties
                             .Builder()
                             .correlationId(requestProps.getCorrelationId())
                             .build();
                     try {
+                        logger.debug("Sending back response to login code request: " + response);
                         channel.basicPublish("", requestProps.getReplyTo(), responseProps, serializer.serialize(response));
                         channel.basicCancel(consumerTag);  // Cancel this consumer
                     } catch (IOException e) {
@@ -188,6 +203,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        logger.debug("Created auto-named queue: " + name);
         return name;
     }
 

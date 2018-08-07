@@ -63,4 +63,12 @@ public class Request {
         return (req1.getSetArg() == null && req2.getSetArg() == null) || req1.getSetArg().equals(req2.getSetArg());
     }
 
+    @Override
+    public String toString() {
+        String s = name + " ";
+        if (isStringRequest()) s += stringArg;
+        else if (isSetRequest()) s += setArg;
+        return s;
+    }
+
 }

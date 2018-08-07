@@ -1,34 +1,46 @@
 package ai.quantumsense.tgmonitor.ipc.messenger.serializer;
 
+import ai.quantumsense.tgmonitor.ipc.messenger.Serializer;
 import ai.quantumsense.tgmonitor.ipc.payload.Request;
 import ai.quantumsense.tgmonitor.ipc.payload.Response;
-import ai.quantumsense.tgmonitor.ipc.messenger.Serializer;
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 
 public class JsonSerializer implements Serializer {
 
+    private Logger logger = LoggerFactory.getLogger(JsonSerializer.class);
+
     private Gson gson = new Gson();
 
     @Override
     public byte[] serialize(Request request) {
-        return str2bytes(gson.toJson(request));
+        String json = gson.toJson(request);
+        logger.debug("Serializing request: " + json);
+        return str2bytes(json);
     }
 
     @Override
     public byte[] serialize(Response response) {
-        return str2bytes(gson.toJson(response));
+        String json = gson.toJson(response);
+        logger.debug("Serializing response: " + json);
+        return str2bytes(json);
     }
 
     @Override
     public Request deserializeRequest(byte[] request) {
-        return gson.fromJson(bytes2str(request), Request.class);
+        String json = bytes2str(request);
+        logger.debug("Deserializing request: " + json);
+        return gson.fromJson(json, Request.class);
     }
 
     @Override
     public Response deserializeResponse(byte[] response) {
-        return gson.fromJson(bytes2str(response), Response.class);
+        String json = bytes2str(response);
+        logger.debug("Deserializing response: " + json);
+        return gson.fromJson(json, Response.class);
     }
 
     private String bytes2str(byte[] bytes) {

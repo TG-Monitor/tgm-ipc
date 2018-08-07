@@ -4,12 +4,16 @@ import ai.quantumsense.tgmonitor.corefacade.CoreFacade;
 import ai.quantumsense.tgmonitor.ipc.payload.Request;
 import ai.quantumsense.tgmonitor.ipc.payload.Response;
 import ai.quantumsense.tgmonitor.logincodeprompt.LoginCodePrompt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
 import static ai.quantumsense.tgmonitor.ipc.requests.RequestName.*;
 
 public class UiEndpoint implements CoreFacade {
+
+    private Logger logger = LoggerFactory.getLogger(UiEndpoint.class);
 
     private UiMessenger messenger;
 
