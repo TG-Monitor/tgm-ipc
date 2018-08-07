@@ -45,7 +45,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
             connection = factory.newConnection();
             channel = connection.createChannel();
             logger.debug("Declaring request queue \"" + REQUEST_QUEUE + "\"");
-            channel.queueDeclare(REQUEST_QUEUE, false, false, false, null);
+            channel.queueDeclare(REQUEST_QUEUE, false, false, true, null);
             logger.debug("Declaring response queue \"" + responseQueue + "\"");
             channel.queueDeclare(responseQueue, false, true, false, null);
         } catch (IOException | TimeoutException e) {
