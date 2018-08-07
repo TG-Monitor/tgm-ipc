@@ -14,9 +14,7 @@ public class CoreEndpoint {
     private Logger logger = LoggerFactory.getLogger(CoreEndpoint.class);
 
     public CoreEndpoint(CoreMessenger messenger, CoreFacade coreFacade) {
-
         logger.debug("Creating Core Endpoint");
-
         messenger.startRequestListener(request -> {
             switch (request.getName()) {
 

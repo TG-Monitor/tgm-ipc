@@ -145,7 +145,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
                     if (responseProps.getCorrelationId().equals(correlationId)) {
                         wait.offer(body);
-                        logger.debug("Received a message with matching correlation ID: " + correlationId);
+                        logger.debug("Received response with matching correlation ID: " + correlationId);
                         try {
                             channel.basicCancel(consumerTag);
                         } catch (IOException e) {
@@ -153,7 +153,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
                         }
                     }
                     else {
-                        logger.debug("Received a response but correlation IDs don't match: expected " + correlationId + ", but received " + responseProps.getCorrelationId());
+                        throw new RuntimeException("Received message with unexpected correlation ID: expected " + correlationId + ", but received " + responseProps.getCorrelationId());
                     }
                 }
             });

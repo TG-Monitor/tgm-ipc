@@ -18,28 +18,28 @@ public class JsonSerializer implements Serializer {
     @Override
     public byte[] serialize(Request request) {
         String json = gson.toJson(request);
-        logger.debug("Serializing request: " + json);
+        logger.debug("Serializing request to " + json);
         return str2bytes(json);
     }
 
     @Override
     public byte[] serialize(Response response) {
         String json = gson.toJson(response);
-        logger.debug("Serializing response: " + json);
+        logger.debug("Serializing response to " + json);
         return str2bytes(json);
     }
 
     @Override
     public Request deserializeRequest(byte[] request) {
         String json = bytes2str(request);
-        logger.debug("Deserializing request: " + json);
+        logger.debug("Deserializing request from " + json);
         return gson.fromJson(json, Request.class);
     }
 
     @Override
     public Response deserializeResponse(byte[] response) {
         String json = bytes2str(response);
-        logger.debug("Deserializing response: " + json);
+        logger.debug("Deserializing response from " + json);
         return gson.fromJson(json, Response.class);
     }
 

@@ -67,12 +67,11 @@ public class Response {
 
     @Override
     public String toString() {
-        String s = null;
-        if (isVoidResponse()) s = "<void>";
-        else if (isBooleanResponse()) s = bool + " (boolean)";
-        else if (isStringResponse()) s = string;
-        else if (isSetResponse()) s = set.toString();
-        return s;
+        String s = "<";
+        if (isBooleanResponse()) s += bool;
+        else if (isStringResponse()) s += string;
+        else if (isSetResponse()) s += set.toString();
+        return s + ">";
     }
 }
 

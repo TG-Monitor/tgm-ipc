@@ -39,8 +39,8 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
             logger.debug("Connecting to RabbitMQ on " + factory.getHost());
             connection = factory.newConnection();
             channel = connection.createChannel();
+            logger.debug("Declaring request queue \"" + REQUEST_QUEUE + "\"");
             channel.queueDeclare(REQUEST_QUEUE, false, false, true, null);
-            logger.debug("Declared request queue \"" + REQUEST_QUEUE + "\"");
         } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
@@ -57,14 +57,14 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
                     if (requestProps.getHeaders() != null && requestProps.getHeaders().containsKey(KEY_LOGIN_CODE_REQUEST_QUEUE))
                         loginCodeRequestQueue = (String) requestProps.getHeaders().get(KEY_LOGIN_CODE_REQUEST_QUEUE);
                     Request request = serializer.deserializeRequest(body);
-                    logger.debug("Received request on queue \"" + REQUEST_QUEUE + "\": " + request);
+                    logger.debug("Received request " + request + " on queue \"" + REQUEST_QUEUE + "\" with correlation ID " + requestProps.getCorrelationId());
                     Response response = callback.onRequestReceived(request);
                     try {
                         String responseQueue = requestProps.getReplyTo();
                         AMQP.BasicProperties responseProps = new AMQP.BasicProperties.Builder()
                                 .correlationId(requestProps.getCorrelationId())
                                 .build();
-                        logger.debug("Sending back response on queue \"" + responseQueue + "\": " + response);
+                        logger.debug("Sending back response " + response + " on queue \"" + responseQueue + "\" with correlation ID " + requestProps.getCorrelationId());
                         channel.basicPublish("", responseQueue, responseProps, serializer.serialize(response));
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -78,20 +78,18 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
 
     @Override
     public Response loginCodeRequest(Request request) {
-        Response response = null;
+        final BlockingQueue<byte[]> wait = new ArrayBlockingQueue<>(1);
         try {
-            // Send request
+            String correlationId = makeUuid();
             String replyToQueue = createAutoNamedQueue();
             AMQP.BasicProperties requestProps = new AMQP.BasicProperties
                     .Builder()
-                    .correlationId(makeUuid())
+                    .correlationId(correlationId)
                     .replyTo(replyToQueue)
                     .build();
-            logger.debug("Sending login code request ");
+            logger.debug("Sending login code request " + request + " on queue \"" + loginCodeRequestQueue + " with correlation ID " + correlationId);
             channel.basicPublish("", loginCodeRequestQueue, requestProps, serializer.serialize(request));
-            // Create response listener
             logger.debug("Start listening for response to login code request on queue \"" + replyToQueue + "\"");
-            final BlockingQueue<byte[]> wait = new ArrayBlockingQueue<>(1);
             channel.basicConsume(replyToQueue, true, new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
@@ -103,11 +101,18 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
                             e.printStackTrace();
                         }
                     }
+                    else {
+                        throw new RuntimeException("Received message with unexpected correlation ID: expected " + correlationId + ", but received " + responseProps.getCorrelationId());
+                    }
                 }
             });
-            // Wait for response
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Response response = null;
+        try {
             response = serializer.deserializeResponse(wait.take());
-        } catch (IOException | InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         logger.debug("Received response to login code request: " + response);

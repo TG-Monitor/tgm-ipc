@@ -65,10 +65,10 @@ public class Request {
 
     @Override
     public String toString() {
-        String s = name + " ";
-        if (isStringRequest()) s += stringArg;
-        else if (isSetRequest()) s += setArg;
-        return s;
+        String s = "<" + name;
+        if (isStringRequest()) s += " " + stringArg;
+        else if (isSetRequest()) s += " " + setArg;
+        return s + ">";
     }
 
 }
