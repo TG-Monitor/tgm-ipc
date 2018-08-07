@@ -85,11 +85,18 @@ public class RabbitMqUiMessenger implements UiMessenger {
      * @return Correlation ID.
      */
     private String sendRequest(Request request) {
+        String correlationId = createCorrelationId();
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                .correlationId(createCorrelationId())
+                .correlationId(correlationId)
                 .replyTo(responseQueue)
                 .build();
-        return doSendRequest(request, props);
+        try {
+            logger.debug("Sending request " + request + " with correlation ID " + correlationId);
+            channel.basicPublish("", REQUEST_QUEUE, props, serializer.serialize(request));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return correlationId;
     }
 
     /**
@@ -103,27 +110,22 @@ public class RabbitMqUiMessenger implements UiMessenger {
      * @return Correlation ID.
      */
     private String sendLoginRequest(Request request) {
-        logger.debug("Preparing to send login request");
+        String correlationId = createCorrelationId();
         loginCodeRequestQueue = createAutoNamedQueue();
-        logger.debug("Created login code request queue " + loginCodeRequestQueue);
         Map<String, Object> headers = new HashMap<>();
         headers.put(KEY_LOGIN_CODE_REQUEST_QUEUE, loginCodeRequestQueue);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                .correlationId(createCorrelationId())
+                .correlationId(correlationId)
                 .replyTo(responseQueue)
                 .headers(headers)
                 .build();
-        return doSendRequest(request, props);
-    }
-
-    private String doSendRequest(Request request, AMQP.BasicProperties props) {
-        logger.debug("Sending request: " + request);
         try {
+            logger.debug("Sending login request " + request + " on queue " + loginCodeRequestQueue + " with correlation ID " + correlationId);
             channel.basicPublish("", REQUEST_QUEUE, props, serializer.serialize(request));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return props.getCorrelationId();
+        return correlationId;
     }
 
     /**

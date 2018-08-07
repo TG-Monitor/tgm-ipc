@@ -61,11 +61,11 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
                     Response response = callback.onRequestReceived(request);
                     try {
                         String responseQueue = requestProps.getReplyTo();
+                        AMQP.BasicProperties responseProps = new AMQP.BasicProperties.Builder()
+                                .correlationId(requestProps.getCorrelationId())
+                                .build();
                         logger.debug("Sending back response on queue \"" + responseQueue + "\": " + response);
-                        channel.basicPublish("",
-                                responseQueue,
-                                getResponseProps(requestProps.getCorrelationId()),
-                                serializer.serialize(response));
+                        channel.basicPublish("", responseQueue, responseProps, serializer.serialize(response));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -120,12 +120,6 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private AMQP.BasicProperties getResponseProps(String correlationId) {
-        return new AMQP.BasicProperties.Builder()
-                .correlationId(correlationId)
-                .build();
     }
 
     private String createAutoNamedQueue() {
