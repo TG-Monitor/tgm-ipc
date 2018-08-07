@@ -143,6 +143,10 @@ public class RabbitMqUiMessenger implements UiMessenger {
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
                     if (responseProps.getCorrelationId().equals(correlationId)) {
                         wait.offer(body);
+                        logger.debug("Received a message with matching correlation ID: " + correlationId);
+                    }
+                    else {
+                        logger.debug("Received a response but correlation IDs don't match: expected " + correlationId + ", but received " + responseProps.getCorrelationId());
                     }
                 }
             });
