@@ -111,7 +111,12 @@ public class RabbitMqUiMessenger implements UiMessenger {
      */
     private String sendLoginRequest(Request request) {
         String correlationId = makeUuid();
-        loginCodeRequestQueue = createAutoNamedQueue();
+        try {
+            loginCodeRequestQueue = channel.queueDeclare().getQueue();
+            logger.debug("Created queue \"" + loginCodeRequestQueue + "\" to listen on for upcoming login code request from core");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Map<String, Object> headers = new HashMap<>();
         headers.put(KEY_LOGIN_CODE_REQUEST_QUEUE, loginCodeRequestQueue);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
@@ -120,7 +125,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
                 .headers(headers)
                 .build();
         try {
-            logger.debug("Sending login request " + request + " on queue " + loginCodeRequestQueue + " with correlation ID " + correlationId);
+            logger.debug("Sending login request " + request + " on queue " + REQUEST_QUEUE + " with correlation ID " + correlationId);
             channel.basicPublish("", REQUEST_QUEUE, props, serializer.serialize(request));
         } catch (IOException e) {
             e.printStackTrace();
@@ -194,7 +199,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
                             .correlationId(requestProps.getCorrelationId())
                             .build();
                     try {
-                        logger.debug("Sending back response to login code request: " + response);
+                        logger.debug("Sending back response to login code request " + response + " on queue " + requestProps.getReplyTo());
                         channel.basicPublish("", requestProps.getReplyTo(), responseProps, serializer.serialize(response));
                         channel.basicCancel(consumerTag);  // Cancel this consumer
                     } catch (IOException e) {
