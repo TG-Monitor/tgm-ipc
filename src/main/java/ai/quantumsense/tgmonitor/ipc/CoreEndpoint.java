@@ -4,18 +4,18 @@ import ai.quantumsense.tgmonitor.corefacade.CoreFacade;
 import ai.quantumsense.tgmonitor.ipc.payload.Request;
 import ai.quantumsense.tgmonitor.ipc.payload.Response;
 import ai.quantumsense.tgmonitor.logincodeprompt.LoginCodePrompt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static ai.quantumsense.tgmonitor.ipc.requests.RequestName.*;
 
 public class CoreEndpoint {
 
-    CoreMessenger messenger;
-    CoreFacade coreFacade;
+    private Logger logger = LoggerFactory.getLogger(CoreEndpoint.class);
 
     public CoreEndpoint(CoreMessenger messenger, CoreFacade coreFacade) {
 
-        this.messenger = messenger;
-        this.coreFacade = coreFacade;
+        logger.debug("Creating Core Endpoint");
 
         messenger.startRequestListener(request -> {
             switch (request.getName()) {

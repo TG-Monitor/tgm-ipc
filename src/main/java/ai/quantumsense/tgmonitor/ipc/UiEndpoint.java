@@ -18,6 +18,7 @@ public class UiEndpoint implements CoreFacade {
     private UiMessenger messenger;
 
     public UiEndpoint(UiMessenger messenger) {
+        logger.debug("Creating UI Endpoint");
         this.messenger = messenger;
     }
 
