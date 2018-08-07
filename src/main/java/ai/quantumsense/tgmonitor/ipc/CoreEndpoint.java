@@ -19,7 +19,8 @@ public class CoreEndpoint {
             switch (request.getName()) {
 
                 case LOGIN:
-                    coreFacade.login(request.getStringArg(), new LoginCodePrompt() {
+                    String phoneNumber = request.getStringArg();
+                    coreFacade.login(phoneNumber, new LoginCodePrompt() {
                         @Override
                         public String promptLoginCode() {
                             Response response = messenger.loginCodeRequest(new Request(PROMPT_LOGIN_CODE));

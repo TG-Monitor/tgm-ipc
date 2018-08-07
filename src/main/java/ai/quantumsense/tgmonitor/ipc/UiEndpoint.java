@@ -24,7 +24,7 @@ public class UiEndpoint implements CoreFacade {
 
     @Override
     public void login(String phoneNumber, LoginCodePrompt loginCodePrompt) {
-        messenger.loginRequest(new Request(LOGIN), loginCodePrompt);
+        messenger.loginRequest(new Request(LOGIN, phoneNumber), loginCodePrompt);
     }
 
     @Override
