@@ -95,12 +95,13 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
             channel.basicConsume(replyToQueue, true, new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
-                    if (responseProps.getCorrelationId().equals(requestProps.getCorrelationId()))
+                    if (responseProps.getCorrelationId().equals(requestProps.getCorrelationId())) {
                         wait.offer(body);
-                    try {
-                        channel.basicCancel(consumerTag);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        try {
+                            channel.basicCancel(consumerTag);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             });
