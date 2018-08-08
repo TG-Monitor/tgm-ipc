@@ -199,7 +199,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
                             .correlationId(requestProps.getCorrelationId())
                             .build();
                     try {
-                        logger.debug("Sending back login code response " + response + " with correlation ID " + responseProps.getCorrelationId() + "on queue " + requestProps.getReplyTo());
+                        logger.debug("Sending back login code response " + response + " with correlation ID " + responseProps.getCorrelationId() + " on queue \"" + requestProps.getReplyTo() + "\"");
                         channel.basicPublish("", requestProps.getReplyTo(), responseProps, serializer.serialize(response));
                         channel.basicCancel(consumerTag);  // Cancel this consumer
                     } catch (IOException e) {

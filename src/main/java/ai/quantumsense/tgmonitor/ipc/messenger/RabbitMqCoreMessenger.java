@@ -92,13 +92,15 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
             logger.debug("Sending login code request " + request + " on queue \"" + loginCodeRequestQueue + " with correlation ID " + correlationId);
             channel.basicPublish("", loginCodeRequestQueue, requestProps, serializer.serialize(request));
             logger.debug("Start listening for response to login code request on queue \"" + replyToQueue + "\"");
-            channel.basicConsume(replyToQueue, true, new DefaultConsumer(channel) {
+            String consumerTag = channel.basicConsume(replyToQueue, true, new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
+                    logger.debug("Consumed message from queue \"" + replyToQueue + "\": " + new String(body));
                     if (responseProps.getCorrelationId().equals(correlationId)) {
                         logger.debug("Received response with matching correlation ID: " + correlationId);
                         wait.offer(body);
                         try {
+                            logger.debug("Canceling consumer " + consumerTag);
                             channel.basicCancel(consumerTag);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -110,6 +112,7 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
                     }
                 }
             });
+            logger.debug("Consumer " + consumerTag + " listening on queue \"" + replyToQueue + "\"");
         } catch (IOException e) {
             e.printStackTrace();
         }
