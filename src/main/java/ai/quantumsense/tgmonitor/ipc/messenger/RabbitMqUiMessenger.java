@@ -192,14 +192,14 @@ public class RabbitMqUiMessenger implements UiMessenger {
             channel.basicConsume(loginCodeRequestQueue, true, new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties requestProps, byte[] body) {
-                    logger.debug("Received login code request " + serializer.deserializeRequest(body) + " with correlation ID " + requestProps.getCorrelationId() + " on queue");
+                    logger.debug("Received login code request " + serializer.deserializeRequest(body) + " with correlation ID " + requestProps.getCorrelationId() + " on queue " + loginCodeRequestQueue);
                     Response response = new Response(loginCodePrompt.promptLoginCode());
-                    AMQP.BasicProperties responseProps = new AMQP.BasicProperties
-                            .Builder()
+                    logger.debug("Created login code response " + response);
+                    AMQP.BasicProperties responseProps = new AMQP.BasicProperties.Builder()
                             .correlationId(requestProps.getCorrelationId())
                             .build();
                     try {
-                        logger.debug("Sending back response " + response + "  to login code request with correlation ID " + responseProps.getCorrelationId() + "on queue " + requestProps.getReplyTo());
+                        logger.debug("Sending back login code response " + response + " with correlation ID " + responseProps.getCorrelationId() + "on queue " + requestProps.getReplyTo());
                         channel.basicPublish("", requestProps.getReplyTo(), responseProps, serializer.serialize(response));
                         channel.basicCancel(consumerTag);  // Cancel this consumer
                     } catch (IOException e) {
