@@ -93,6 +93,7 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
             logger.debug("Sending login code request " + request + " on queue \"" + loginCodeRequestQueue + " with correlation ID " + correlationId);
             channel.basicPublish("", loginCodeRequestQueue, requestProps, serializer.serialize(request));
             logger.debug("Start listening for response to login code request on queue \"" + replyToQueue + "\"");
+            channel.basicQos(10);
             String consumerTag = channel.basicConsume(replyToQueue, true, new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
