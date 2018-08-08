@@ -113,7 +113,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
         String correlationId = makeUuid();
         try {
             loginCodeRequestQueue = channel.queueDeclare().getQueue();
-            logger.debug("Created queue \"" + loginCodeRequestQueue + "\" to listen on for upcoming login code request from core");
+            logger.debug("Preparing for login request: created queue \"" + loginCodeRequestQueue + "\" for listening for upcoming login code request");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -125,7 +125,7 @@ public class RabbitMqUiMessenger implements UiMessenger {
                 .headers(headers)
                 .build();
         try {
-            logger.debug("Sending login request " + request + " on queue " + REQUEST_QUEUE + " with correlation ID " + correlationId);
+            logger.debug("Sending login request " + request + " on queue \"" + REQUEST_QUEUE + "\" with correlation ID " + correlationId);
             channel.basicPublish("", REQUEST_QUEUE, props, serializer.serialize(request));
         } catch (IOException e) {
             e.printStackTrace();

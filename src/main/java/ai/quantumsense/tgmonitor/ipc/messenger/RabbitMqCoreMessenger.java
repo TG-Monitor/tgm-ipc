@@ -53,11 +53,13 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
             channel.basicConsume(REQUEST_QUEUE, true, new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties requestProps, byte[] body) {
-                    // If this is a login request, get the queue to use for the login code request
-                    if (requestProps.getHeaders() != null && requestProps.getHeaders().containsKey(KEY_LOGIN_CODE_REQUEST_QUEUE))
-                        loginCodeRequestQueue = requestProps.getHeaders().get(KEY_LOGIN_CODE_REQUEST_QUEUE).toString();
                     Request request = serializer.deserializeRequest(body);
                     logger.debug("Received request " + request + " on queue \"" + REQUEST_QUEUE + "\" with correlation ID " + requestProps.getCorrelationId());
+                    // If this is a login request, get the queue to use for the login code request
+                    if (requestProps.getHeaders() != null && requestProps.getHeaders().containsKey(KEY_LOGIN_CODE_REQUEST_QUEUE)) {
+                        loginCodeRequestQueue = requestProps.getHeaders().get(KEY_LOGIN_CODE_REQUEST_QUEUE).toString();
+                        logger.debug("This is a login request, retrieved queue for login code request from message header: " + loginCodeRequestQueue);
+                    }
                     Response response = callback.onRequestReceived(request);
                     try {
                         String responseQueue = requestProps.getReplyTo();
