@@ -7,8 +7,10 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,9 +96,34 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
             channel.basicPublish("", loginCodeRequestQueue, requestProps, serializer.serialize(request));
             logger.debug("Start listening for response to login code request on queue \"" + replyToQueue + "\"");
             channel.basicQos(10);
-            String consumerTag = channel.basicConsume(replyToQueue, true, new DefaultConsumer(channel) {
+            String consumerTag = channel.basicConsume(replyToQueue, true, new Consumer() {
                 @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
+                public void handleConsumeOk(String consumerTag) {
+                    logger.debug("handleConsumeOk");
+                }
+
+                @Override
+                public void handleCancelOk(String consumerTag) {
+                    logger.debug("handleCancelOk");
+                }
+
+                @Override
+                public void handleCancel(String consumerTag) throws IOException {
+                    logger.debug("handleCancel");
+                }
+
+                @Override
+                public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
+                    logger.debug("handleShutdownSignal");
+                }
+
+                @Override
+                public void handleRecoverOk(String consumerTag) {
+                    logger.debug("handleRecoverOk");
+                }
+
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) throws IOException {
                     logger.debug("Consumed message from queue \"" + replyToQueue + "\": " + new String(body));
                     if (responseProps.getCorrelationId().equals(correlationId)) {
                         logger.debug("Received response with matching correlation ID: " + correlationId);
@@ -114,6 +141,26 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
                     }
                 }
             });
+//            String consumerTag = channel.basicConsume(replyToQueue, true, new DefaultConsumer(channel) {
+//                @Override
+//                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
+//                    logger.debug("Consumed message from queue \"" + replyToQueue + "\": " + new String(body));
+//                    if (responseProps.getCorrelationId().equals(correlationId)) {
+//                        logger.debug("Received response with matching correlation ID: " + correlationId);
+//                        wait.offer(body);
+//                        try {
+//                            logger.debug("Canceling consumer " + consumerTag);
+//                            channel.basicCancel(consumerTag);
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                    else {
+//                        logger.debug("Received message with unexpected correlation ID: expected " + correlationId + ", but received " + responseProps.getCorrelationId());
+//                        throw new RuntimeException("Received message with unexpected correlation ID: expected " + correlationId + ", but received " + responseProps.getCorrelationId());
+//                    }
+//                }
+//            });
             logger.debug("Consumer " + consumerTag + " listening on queue \"" + replyToQueue + "\"");
         } catch (IOException e) {
             e.printStackTrace();
