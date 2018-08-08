@@ -7,6 +7,9 @@ import ai.quantumsense.tgmonitor.logincodeprompt.LoginCodePrompt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
 import static ai.quantumsense.tgmonitor.ipc.requests.RequestName.*;
 
 public class CoreEndpoint {
@@ -20,13 +23,22 @@ public class CoreEndpoint {
 
                 case LOGIN:
                     String phoneNumber = request.getStringArg();
-                    coreFacade.login(phoneNumber, new LoginCodePrompt() {
+//                    coreFacade.login(phoneNumber, new LoginCodePrompt() {
+//                        @Override
+//                        public String promptLoginCode() {
+//                            Response response = messenger.loginCodeRequest(new Request(PROMPT_LOGIN_CODE));
+//                            return response.getString();
+//                        }
+//                    });
+//                    return new Response();
+                    LoginCodePrompt loginCodePrompt = new LoginCodePrompt() {
                         @Override
                         public String promptLoginCode() {
                             Response response = messenger.loginCodeRequest(new Request(PROMPT_LOGIN_CODE));
                             return response.getString();
                         }
-                    });
+                    };
+                    String loginCode = loginCodePrompt.promptLoginCode();
                     return new Response();
                 case LOGOUT:
                     coreFacade.logout();

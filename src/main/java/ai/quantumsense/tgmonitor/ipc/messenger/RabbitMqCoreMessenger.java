@@ -105,6 +105,7 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
                         }
                     }
                     else {
+                        logger.debug("Received message with unexpected correlation ID: expected " + correlationId + ", but received " + responseProps.getCorrelationId());
                         throw new RuntimeException("Received message with unexpected correlation ID: expected " + correlationId + ", but received " + responseProps.getCorrelationId());
                     }
                 }
