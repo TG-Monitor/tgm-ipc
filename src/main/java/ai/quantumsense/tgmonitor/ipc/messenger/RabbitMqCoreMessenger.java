@@ -96,7 +96,7 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
             channel.basicPublish("", loginCodeRequestQueue, requestProps, serializer.serialize(request));
             logger.debug("Start listening for response to login code request on queue \"" + replyToQueue + "\"");
             channel.basicQos(10);
-            String consumerTag = channel.basicConsume(replyToQueue, true, new Consumer() {
+            String consumerTag = channel.basicConsume(replyToQueue, false, new Consumer() {
                 @Override
                 public void handleConsumeOk(String consumerTag) {
                     logger.debug("handleConsumeOk");
