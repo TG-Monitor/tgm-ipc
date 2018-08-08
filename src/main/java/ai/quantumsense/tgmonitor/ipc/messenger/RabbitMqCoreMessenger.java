@@ -83,7 +83,7 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
         final BlockingQueue<byte[]> wait = new ArrayBlockingQueue<>(1);
         try {
             String correlationId = makeUuid();
-            String replyToQueue = createAutoNamedQueue();
+            String replyToQueue = channel.queueDeclare().getQueue();
             AMQP.BasicProperties requestProps = new AMQP.BasicProperties
                     .Builder()
                     .correlationId(correlationId)
@@ -95,7 +95,8 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
             channel.basicConsume(replyToQueue, true, new DefaultConsumer(channel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties responseProps, byte[] body) {
-                    if (responseProps.getCorrelationId().equals(requestProps.getCorrelationId())) {
+                    if (responseProps.getCorrelationId().equals(correlationId)) {
+                        logger.debug("Received response with matching correlation ID: " + correlationId);
                         wait.offer(body);
                         try {
                             channel.basicCancel(consumerTag);
@@ -128,17 +129,6 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private String createAutoNamedQueue() {
-        String name = null;
-        try {
-            name = channel.queueDeclare().getQueue();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        logger.debug("Created auto-named queue: " + name);
-        return name;
     }
 
     private String makeUuid() {
