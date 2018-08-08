@@ -83,7 +83,8 @@ public class RabbitMqCoreMessenger implements CoreMessenger {
         final BlockingQueue<byte[]> wait = new ArrayBlockingQueue<>(1);
         try {
             String correlationId = makeUuid();
-            String replyToQueue = channel.queueDeclare().getQueue();
+            String replyToQueue = "login_code_response";
+            channel.queueDeclare(replyToQueue, false, false, false, null);
             AMQP.BasicProperties requestProps = new AMQP.BasicProperties
                     .Builder()
                     .correlationId(correlationId)
